@@ -124,6 +124,9 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
     //lazy的setup
     protected boolean mSetUpLazy = false;
 
+    //seek touch
+    protected boolean mHadSeekTouch = false;
+
     //播放按键
     protected View mStartButton;
 
@@ -270,8 +273,9 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
             });
         }
 
-
-        mSeekEndOffset = CommonUtil.dip2px(getActivityContext(), 50);
+        if (getActivityContext()!=null) {
+            mSeekEndOffset = CommonUtil.dip2px(getActivityContext(), 50);
+        }
     }
 
     @Override
@@ -576,6 +580,7 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
+        mHadSeekTouch = true;
     }
 
     /***
@@ -600,6 +605,7 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
                 Debuger.printfWarning(e.toString());
             }
         }
+        mHadSeekTouch = false;
     }
 
     @Override
@@ -663,10 +669,12 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
     }
 
     protected void touchSurfaceMove(float deltaX, float deltaY, float y) {
-
-        int curWidth = CommonUtil.getCurrentScreenLand((Activity) getActivityContext()) ? mScreenHeight : mScreenWidth;
-        int curHeight = CommonUtil.getCurrentScreenLand((Activity) getActivityContext()) ? mScreenWidth : mScreenHeight;
-
+        int curWidth = 0;
+        int curHeight = 0;
+        if (getActivityContext()!=null) {
+             curWidth = CommonUtil.getCurrentScreenLand((Activity) getActivityContext()) ? mScreenHeight : mScreenWidth;
+             curHeight = CommonUtil.getCurrentScreenLand((Activity) getActivityContext()) ? mScreenWidth : mScreenHeight;
+        }
         if (mChangePosition) {
             int totalTimeDuration = getDuration();
             mSeekTimePosition = (int) (mDownPosition + (deltaX * totalTimeDuration / curWidth) / mSeekRatio);
@@ -693,10 +701,10 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
     }
 
     protected void touchSurfaceMoveFullLogic(float absDeltaX, float absDeltaY) {
-
-
-        int curWidth = CommonUtil.getCurrentScreenLand((Activity) getActivityContext()) ? mScreenHeight : mScreenWidth;
-
+        int curWidth = 0;
+        if (getActivityContext()!=null) {
+            curWidth = CommonUtil.getCurrentScreenLand((Activity) getActivityContext()) ? mScreenHeight : mScreenWidth;
+        }
         if (absDeltaX > mThreshold || absDeltaY > mThreshold) {
             cancelProgressTimer();
             if (absDeltaX >= mThreshold) {
@@ -920,7 +928,9 @@ public abstract class GSYVideoControlView extends GSYVideoView implements View.O
         if (mProgressBar == null || mTotalTimeTextView == null || mCurrentTimeTextView == null) {
             return;
         }
-
+        if(mHadSeekTouch) {
+            return;
+        }
         if (!mTouchingProgressBar) {
             if (progress != 0) mProgressBar.setProgress(progress);
         }
